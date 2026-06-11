@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package scheduler;
+
+option go_package = "github.com/rekhaguptaji/shiny-octo-rotary-phone/gen/go/scheduler";
+option java_multiple_files = true;
+option java_package = "com.scheduler.api";
+
+// Task Service Definition
+service TaskService {
+  // Schedule a new task
+  rpc ScheduleTask(TaskRequest) returns (TaskResponse);
+  
+  // Get task status
+  rpc GetTaskStatus(TaskStatusRequest) returns (TaskStatusResponse);
+  
+  // Stream task events in real-time
+  rpc StreamTaskEvents(StreamRequest) returns (stream TaskEvent);
+  
+  // Get cluster metrics
+  rpc GetClusterMetrics(MetricsRequest) returns (MetricsResponse);
+  
+  // Cancel running task
+  rpc CancelTask(CancelRequest) returns (CancelResponse);
+}
+
+message ResourceRequirements {
+  int32 cpu_cores = 1;
+  int32 memory_gb = 2;
+  int32 gpu_count = 3;
+  int32 gpu_memory_gb = 4;
+  int32 network_bandwidth_mbps = 5;
+  int32 disk_space_gb = 6;
+}
+
+message TaskRequest {
+  string id = 1;
+  string description = 2;
+  int32 priority = 3;  // 1-10
+  int32 timeout_seconds = 4;
+  ResourceRequirements resource_requirements = 5;
+  repeated string dependencies = 6;
+  map<string, string> retry_policy = 7;
+  string sla_guarantee = 8;
+  map<string, string> tags = 9;
+}
+
+message TaskResponse {
+  string task_id = 1;
+  string status = 2;
+  int64 scheduled_timestamp = 3;
+  string worker_id = 4;
+}
+
+message TaskStatusRequest {
+  string task_id = 1;
+}
+
+message TaskStatusResponse {
+  string task_id = 1;
+  string status = 2;  // pending, running, completed, failed
+  int64 start_time = 3;
+  int64 end_time = 4;
+  float execution_time_ms = 5;
+  bytes output = 6;
+  string error = 7;
+  map<string, float> metrics = 8;
+}
+
+message StreamRequest {
+  string task_id = 1;
+  bool include_metrics = 2;
+}
+
+message TaskEvent {
+  string event_id = 1;
+  string task_id = 2;
+  string event_type = 3;  // scheduled, started, progress, completed, failed
+  int64 timestamp = 4;
+  map<string, string> data = 5;
+  float progress_percent = 6;
+}
+
+message MetricsRequest {
+  bool include_historical = 1;
+  int32 time_window_minutes = 2;
+}
+
+message MetricsResponse {
+  int32 cluster_size = 1;
+  int32 active_workers = 2;
+  int64 total_tasks = 3;
+  int64 completed_tasks = 4;
+  int64 failed_tasks = 5;
+  float success_rate = 6;
+  float avg_execution_time_ms = 7;
+  float p99_latency_ms = 8;
+  map<string, float> resource_utilization = 9;
+}
+
+message CancelRequest {
+  string task_id = 1;
+}
+
+message CancelResponse {
+  bool success = 1;
+  string message = 2;
+}
